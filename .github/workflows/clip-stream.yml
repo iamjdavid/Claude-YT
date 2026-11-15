@@ -1,0 +1,63 @@
+name: Clip a stream
+# Paste a Twitch/YouTube VOD link and get vertical Shorts of its best moments.
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Stream VOD link (Twitch or YouTube, must have finished)"
+        required: true
+        type: string
+      clips:
+        description: "How many clips"
+        default: "5"
+        type: string
+      layout:
+        description: "blur = whole frame + blurred background, crop = full screen (cuts the sides)"
+        default: blur
+        type: choice
+        options: [blur, crop]
+
+jobs:
+  clip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: System packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-dejavu-core
+          curl -sSfL -o assets/fonts/Anton-Regular.ttf \
+            https://github.com/google/fonts/raw/main/ofl/anton/Anton-Regular.ttf || true
+
+      - name: Python packages
+        run: pip install -r requirements.txt
+
+      - name: YouTube cookies (optional, helps when YouTube blocks the download)
+        env:
+          COOKIES: ${{ secrets.YTDLP_COOKIES }}
+        run: |
+          if [ -n "$COOKIES" ]; then printf '%s' "$COOKIES" > "$RUNNER_TEMP/cookies.txt"; echo "YTDLP_COOKIES=$RUNNER_TEMP/cookies.txt" >> "$GITHUB_ENV"; fi
+
+      - name: Find and cut the best moments
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          URL: ${{ inputs.url }}
+          CLIPS: ${{ inputs.clips }}
+          LAYOUT: ${{ inputs.layout }}
+        run: python -m gta6shorts.clips "$URL" --clips "$CLIPS" --layout "$LAYOUT"
+
+      - name: Save clips
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stream-clips-${{ github.run_number }}
+          path: output/clips/
+          retention-days: 30

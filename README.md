@@ -38,6 +38,29 @@ python -m gta6shorts --dry-run   # prueba sin APIs (voz muda, imágenes generada
 python -m gta6shorts --upload    # además lo sube a YouTube
 ```
 
+## Clips de directos
+
+Pega el enlace de un directo **ya terminado** (VOD de Twitch o YouTube) y obtén Shorts verticales de sus mejores momentos.
+
+**En GitHub:** *Actions → Clip a stream → Run workflow*, pega el enlace, elige cuántos clips y el formato:
+- `blur`: imagen completa sobre un fondo desenfocado (no se corta nada).
+- `crop`: pantalla completa (recorta los lados).
+
+Los clips aparecen en *Artifacts* (`stream-clips-N`): `clip_01.mp4`, `clip_01.json` (título, descripción, tags) y `UPLOAD.md`.
+
+**Cómo encuentra los momentos** (en ventanas de 5 s a lo largo de todo el directo):
+1. Velocidad del chat (mensajes por minuto, ajustando unos 8 s de retraso).
+2. "Hype" en el chat: KEKW, LUL, OMG, W, "clip it", JAJAJA, 💀, "!!!"…
+3. Picos de volumen (gritos, explosiones).
+
+Solo descarga esos minutos (no el directo entero), los transcribe con Whisper y Claude elige los mejores, los recorta para que empiecen justo antes de la acción y terminen en la reacción, y escribe títulos en el idioma del clip.
+
+**Local:** `python -m gta6shorts.clips "https://www.twitch.tv/videos/..." --clips 5 --layout blur`
+
+Notas:
+- Twitch funciona mejor desde GitHub. YouTube a veces bloquea las descargas desde servidores; si pasa, exporta tus cookies de YouTube (extensión "Get cookies.txt LOCALLY") y guárdalas como secret `YTDLP_COOKIES`.
+- **Solo publica clips de tus propios directos o de streamers que te den permiso** (muchos tienen programas de clippers). La descripción incluye siempre el crédito y el enlace al directo original.
+
 ## Personalización
 
 - `assets/clips/` — pon aquí **tus propias grabaciones de gameplay** (mp4/mov). Si hay clips, se usan en lugar de imágenes IA: es lo que mejor funciona en el nicho de *clipping*.
@@ -68,5 +91,6 @@ gta6shorts/
   package.py    # metadata, miniatura, checklist de subida
   upload.py     # subida opcional con YouTube Data API
   main.py       # orquestador (python -m gta6shorts)
+  clips.py      # clips de directos (python -m gta6shorts.clips URL)
 state/history.json  # temas ya publicados (para no repetir)
 ```

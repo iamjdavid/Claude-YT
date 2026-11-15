@@ -6,3 +6,5 @@ requests>=2.31
 pillow>=10.0
 google-api-python-client>=2.120
 google-auth-oauthlib>=1.2
+chat-downloader>=0.2.8
+faster-whisper>=1.0
