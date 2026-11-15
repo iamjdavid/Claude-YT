@@ -1,4 +1,5 @@
 name: Daily GTA 6 Short
+# Generates one GTA 6 Short per day; see README.md
 
 on:
   schedule:
